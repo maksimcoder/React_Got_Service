@@ -1,24 +1,12 @@
 import React, {Component} from 'react';
 import {Col, Row, Container} from 'reactstrap';
-import styled from 'styled-components';
+
 import Header from '../header';
 import RandomChar from '../randomChar';
-import ItemList from '../itemList';
-import CharDetails from '../charDetails';
+import ErrorMessage from '../errorMessage/errorMessage';
+import CharacterPage from '../characterPage/characterPage';
 
 
-const Btn = styled.button`
-    display: block;
-    width: 200px;
-    height: 25px;
-    outline: none;
-    border: none;
-    border-radius: 5px;
-    background-color: blue;
-    color: white;
-    font-weight: bold;
-    letter-spacing: .5px;
-`;
 
 
 
@@ -26,9 +14,17 @@ export default class App extends Component {
     constructor(props) {
         super(props);
         this.state = {
-            showRandomChar: true
+            showRandomChar: true,
+            error: false
         }
         this.toggleRandomChar = this.toggleRandomChar.bind(this);
+    }
+
+    componentDidCatch() {
+        console.log('error in app');
+        this.setState({
+            error: true
+        })
     }
 
     toggleRandomChar() {
@@ -38,8 +34,14 @@ export default class App extends Component {
     }
 
 
+    
+
     render() {
         const char = this.state.showRandomChar ? <RandomChar/> : null;
+        if (this.state.error) {
+            return <ErrorMessage/>
+        }
+
         return (
             <>
                 <Container>
@@ -51,15 +53,7 @@ export default class App extends Component {
                             {char}
                         </Col>
                     </Row>
-                    <Row>
-                        <Col md='6'>
-                            <Btn onClick={this.toggleRandomChar}>Toggle randomChar</Btn>
-                            <ItemList />
-                        </Col>
-                        <Col md='6'>
-                            <CharDetails />
-                        </Col>
-                    </Row>
+                    <CharacterPage toggleRandomChar={this.toggleRandomChar}/>
                 </Container>
             </>
         );

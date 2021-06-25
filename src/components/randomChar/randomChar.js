@@ -11,7 +11,7 @@ import styles from './RandomChar.module.css';
 
 
 export default class RandomChar extends Component {
-
+ 
     gotApi = new GotService();
     state = {
         char: {},
@@ -20,7 +20,7 @@ export default class RandomChar extends Component {
 
     componentDidMount() {
         this.updateChar();
-        this.timerId = setInterval(this.updateChar, 1500);
+        this.timerId = setInterval(this.updateChar, 10000);
     }
 
     componentWillUnmount() {
@@ -52,7 +52,7 @@ export default class RandomChar extends Component {
 
     render() {
         const { char, loading, error} = this.state;
-        console.log('render');
+
 
         const errorMessage = error ? <ErrorMessage/> : null;
         const spinner = loading ? <Spinner/> : null;

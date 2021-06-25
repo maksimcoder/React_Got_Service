@@ -1,5 +1,7 @@
 import React, {Component} from 'react';
 import styled from 'styled-components';
+import GotService from '../../services/gotService';
+import Spinner from '../spinner/spinner';
 
 
 const ListWrapper = styled.ul`
@@ -35,18 +37,45 @@ const ListItem = styled.li`
 
 export default class ItemList extends Component {
 
+    gotApi = new GotService();
+
+    state = {
+        charList: null
+    }
+    
+    componentDidMount() {
+        this.gotApi.getAllCharacters()
+            .then(charList => {
+                this.setState({
+                    charList
+                });
+            })
+    }
+
+    renderItems(arr) {
+        return arr.map((item, i) => {
+            return (
+                <ListItem
+                    key={i}
+                    onClick={() => this.props.onCharSelected(41 + i)} >
+                    {item.name}
+                </ListItem>
+            )
+        });
+    }
+
     render() {
+
+        const {charList} = this.state;
+        
+        if (!charList) {
+            return <Spinner/>
+        }
+
+        const items = this.renderItems(charList);
         return (
             <ListWrapper>
-                <ListItem>
-                    John Snow
-                </ListItem>
-                <ListItem>
-                    Brandon Stark
-                </ListItem>
-                <ListItem>
-                    Geremy
-                </ListItem>
+                {items}
             </ListWrapper>
         );
     }

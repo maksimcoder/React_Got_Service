@@ -1,6 +1,8 @@
 import React, {Component} from 'react';
 import styled from 'styled-components';
+import GotService from '../../services/gotService';
 import './charDetails.css'; //.select-error
+import Spinner from '../spinner/spinner';
 
 
 const CharBlock = styled.div`
@@ -46,31 +48,93 @@ const CharListItem = styled.li`
 
 export default class CharDetails extends Component {
 
+    gotApi = new GotService();
+
+    state = {
+        char: null,
+        loading: true
+    }
+
+    
+    componentDidMount() {
+        this.updateChar();
+    }
+
+
+    componentDidUpdate(prevProps) {
+        if (this.props.charId !== prevProps.charId) {
+            this.updateChar();
+        }
+    }
+
+    onDataLoaded = (char) => {
+        this.setState({
+            char,
+            loading: false
+        });
+    }
+
+    updateChar() {
+        const {charId} = this.props;
+        if (!charId) {
+            return;
+        }
+
+        this.setState({
+            loading: true
+        })
+
+        this.gotApi.getCharacter(charId)
+            .then(this.onDataLoaded);
+    }
+
+
     render() {
+
+        if (!this.state.char) {
+            return <span className='select-error'>Please select a character</span>
+        }
+
+        
+        const {loading} = this.state;
+
+        const spinner = loading ? <Spinner/> : null;
+        const content = !loading ? <View char={this.state.char}/> : null
+
         return (
             <CharBlock>
-                <h4>John Snow</h4>
-                <CharList flush>
-                    <CharListItem >
-                        <span className="term">Gender</span>
-                        <span>male</span>
-                    </CharListItem>
-                    <CharListItem >
-                        <span className="term">Born</span>
-                        <span>1783</span>
-                    </CharListItem>
-                    <CharListItem >
-                        <span className="term">Died</span>
-                        <span>1820</span>
-                    </CharListItem>
-                    <CharListItem >
-                        <span className="term">Culture</span>
-                        <span>First</span>
-                    </CharListItem>
-                </CharList>
+                {spinner}
+                {content}
             </CharBlock>
-        );
+        )
     }
+}
+
+const View = ({char}) => {
+    const {name, gender, born, died, culture} = char;
+    return (
+        <>
+            <h4>{name}</h4>
+            <CharList flush>
+                <CharListItem >
+                    <span className="term">Gender</span>
+                    <span>{gender}</span>
+                </CharListItem>
+                <CharListItem >
+                    <span className="term">Born</span>
+                    <span>{born}</span>
+                </CharListItem>
+                <CharListItem >
+                    <span className="term">Died</span>
+                    <span>{died}</span>
+                </CharListItem>
+                <CharListItem >
+                    <span className="term">Culture</span>
+                    <span>{culture}</span>
+                </CharListItem>
+            </CharList>
+        </>
+    );
 }
 
 export {CharBlock, CharList, CharListItem};
