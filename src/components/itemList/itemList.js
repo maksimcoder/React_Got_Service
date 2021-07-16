@@ -1,82 +1,136 @@
-import React, {Component} from 'react';
-import styled from 'styled-components';
-import GotService from '../../services/gotService';
-import Spinner from '../spinner/spinner';
+import React, {useState, useEffect} from 'react';
+import './itemList.css';
+import ErrorMessage from '../error';
+import Spinner from '../spinner/';
+
+import PropTypes from 'prop-types';
 
 
-const ListWrapper = styled.ul`
-    display: flex;
-    flex-direction: column;
-    padding-left: 0;
-    margin-top: 0;
-    margin-bottom: 0;
 
-    li:first-child {
-        border-top-left-radius: 0.25rem;
-        border-top-right-radius: 0.25rem;
-    }
 
-    li:last-child {
-        border-bottom-right-radius: 0.25rem;
-        border-bottom-left-radius: 0.25rem;
-    }
-`;
-
-const ListItem = styled.li`
-    position: relative;
-    display: block;
-    padding: 0.75rem 1.25rem;
-    background-color: #fff;
-    border: 1px solid rgba(0, 0, 0, 0.125);
-    cursor: pointer;
-
-    & + & {
-        border-top-width: 0;
-    }
-`;
-
-export default class ItemList extends Component {
-
-    gotApi = new GotService();
-
-    state = {
-        charList: null
-    }
+function ItemList({getData, onItemSelected, renderItem}) {
     
-    componentDidMount() {
-        this.gotApi.getAllCharacters()
-            .then(charList => {
-                this.setState({
-                    charList
-                });
-            })
-    }
+    const [itemList, updateList] = useState([]);
 
-    renderItems(arr) {
-        return arr.map((item, i) => {
+    useEffect(() => {
+        getData()
+            .then((data) => {
+                updateList(data);
+            });
+    }, [])
+   
+    
+    function renderItems(arr) {
+        return arr.map((item) => {
+            const {id} = item;
+            const text = renderItem(item)
             return (
-                <ListItem
-                    key={i}
-                    onClick={() => this.props.onCharSelected(41 + i)} >
-                    {item.name}
-                </ListItem>
+                <li
+                    key={id}
+                    className="list-group-item"
+                    onClick={() => onItemSelected(id)}
+                    >
+                    {text}
+                </li>
             )
-        });
+        })
     }
 
-    render() {
-
-        const {charList} = this.state;
-        
-        if (!charList) {
-            return <Spinner/>
-        }
-
-        const items = this.renderItems(charList);
-        return (
-            <ListWrapper>
-                {items}
-            </ListWrapper>
-        );
+    if(!itemList) {
+        return <Spinner/>
     }
+
+    const items = renderItems(itemList);
+
+    return (
+        <ul className="item-list list-group">
+            {items}
+        </ul>
+    );
+
 }
+
+export default ItemList;
+
+
+
+
+
+
+// class ItemList extends Component {
+
+//     renderItems(arr) {
+//         return arr.map((item) => {
+//             const {id} = item;
+//             const text = this.props.renderItem(item);
+//             console.log(item);
+//             return (
+//                 <li
+//                     key={id}
+//                     className="list-group-item"
+//                     onClick={() => this.props.onItemSelected(id)}
+//                     >
+//                     {text}
+//                 </li>
+//             )
+//         })
+//     }
+
+//     render() {
+//         const {data} = this.props;
+//         const items = this.renderItems(data);
+
+//         return (
+//             <ul className='item-list list-group'>
+//                 {items}
+//             </ul>
+//         )
+//     }
+// }
+
+
+// ItemList.defaultProps = {
+//     onItemSelected: () => {}
+// }
+
+// ItemList.propTypes = {
+//     onItemsSelected: PropTypes.func   
+// }
+
+
+// const withData = (View, getData) => {
+//     return class extends Component {
+
+//         state = {
+//             data: null
+//         }
+
+//         componentDidMount() {
+            
+//             getData()
+//                 .then((data) => {
+//                     this.setState({
+//                         data
+//                     });
+//                 });
+//         }
+
+//         render() {
+//             const {data} = this.state;
+
+//             if (!data) {
+//                 return <Spinner/>
+//             }
+
+//             return (
+//                 <View {...this.props} data={data}/>
+//             )
+//         }
+
+//     }
+// }
+
+// const {getAllCharacters} = new gotService(); // проблема с отображением списка только персонажей
+
+// export default withData(ItemList, getAllCharacters);
+

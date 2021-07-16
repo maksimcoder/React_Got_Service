@@ -1,140 +1,84 @@
-import React, {Component} from 'react';
-import styled from 'styled-components';
+import React, {useState, useEffect} from 'react';
+import './charDetails.css';
 import GotService from '../../services/gotService';
-import './charDetails.css'; //.select-error
-import Spinner from '../spinner/spinner';
+import ErrorMessage from '../error';
+import Spinner from '../spinner/';
 
+const Field = ({item, field, label}) => {
+    return (
+        <li className="list-group-item d-flex justify-content-between">
+            <span className="term">{label}</span>
+            <span>{item[field]}</span>
+        </li>
+    )
+}
 
-const CharBlock = styled.div`
-    background-color: #fff;
-    padding: 25px 25px 15px 25px;
-    margin-bottom: 40px;
-    border-radius: 0.25rem;
-
-    h4 {
-        margin-bottom: 20px;
-        text-align: center;
-    }
-`;
-
-const CharList = styled.ul`
-    display: flex;
-    flex-direction: column;
-    padding-left: 0;
-    margin-bottom: 0;
-    
-    li:first-child {
-        border-top-width: ${props => props.flush ? 0 : 1}
-    }
-    li {
-        border-right-width: 0;
-        border-left-width: 0;
-    }
-    li + li {border-top-width: 0;}
-    
-    li:last-child {
-        border-bottom-width: ${props => props.flush ? 0 : 1}
-    }
-`;
-
-const CharListItem = styled.li`
-    display: flex;
-    justify-content: space-between;
-    position: relative;
-    padding: 0.75rem 1.25rem;
-    background-color: #fff;
-    border: 1px solid rgba(0, 0, 0, 0.125);
-`;
-
-export default class CharDetails extends Component {
-
-    gotApi = new GotService();
-
-    state = {
-        char: null,
-        loading: true
-    }
+export {Field};
 
     
-    componentDidMount() {
-        this.updateChar();
+export default function CharDetails({itemId, getData, children})  {
+    const [item, setItem] = useState(null);
+    const [loading, setLoading] = useState(true);
+    const [error, setError] = useState(false);
+    
+    useEffect(() => {
+        updateChar();
+    }, [itemId]);
+
+
+    function onCharDetailsLoaded(item) {
+        setItem(item);
+        setLoading(false);
     }
 
+    function updateChar() {
 
-    componentDidUpdate(prevProps) {
-        if (this.props.charId !== prevProps.charId) {
-            this.updateChar();
-        }
-    }
-
-    onDataLoaded = (char) => {
-        this.setState({
-            char,
-            loading: false
-        });
-    }
-
-    updateChar() {
-        const {charId} = this.props;
-        if (!charId) {
+        if (!itemId) {
             return;
         }
 
-        this.setState({
-            loading: true
-        })
+        setLoading(true);
 
-        this.gotApi.getCharacter(charId)
-            .then(this.onDataLoaded);
+        getData(itemId)
+            .then( onCharDetailsLoaded )
+            .catch( () => onError())
+    }
+
+    function onError(){
+        setItem(null);
+        setError(true);
     }
 
 
-    render() {
+    if (!item && error) {
+        return <ErrorMessage/>
+    } else if (!item) {
+        return <span className="select-error">Please select a character</span>
+    }
 
-        if (!this.state.char) {
-            return <span className='select-error'>Please select a character</span>
-        }
+    const {name} = item;
 
-        
-        const {loading} = this.state;
-
-        const spinner = loading ? <Spinner/> : null;
-        const content = !loading ? <View char={this.state.char}/> : null
-
+    if (loading) {
         return (
-            <CharBlock>
-                {spinner}
-                {content}
-            </CharBlock>
+            <div className="char-details rounded">
+                <Spinner/>
+            </div>
         )
     }
-}
 
-const View = ({char}) => {
-    const {name, gender, born, died, culture} = char;
     return (
-        <>
+        <div className="char-details rounded">
             <h4>{name}</h4>
-            <CharList flush>
-                <CharListItem >
-                    <span className="term">Gender</span>
-                    <span>{gender}</span>
-                </CharListItem>
-                <CharListItem >
-                    <span className="term">Born</span>
-                    <span>{born}</span>
-                </CharListItem>
-                <CharListItem >
-                    <span className="term">Died</span>
-                    <span>{died}</span>
-                </CharListItem>
-                <CharListItem >
-                    <span className="term">Culture</span>
-                    <span>{culture}</span>
-                </CharListItem>
-            </CharList>
-        </>
+            <ul className="list-group list-group-flush">
+                {
+                    React.Children.map(children, (child) => {
+                        return React.cloneElement(child, {item})
+                    })
+                }
+            </ul>
+        </div>
     );
+    
 }
 
-export {CharBlock, CharList, CharListItem};
+//
